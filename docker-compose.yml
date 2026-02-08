@@ -1,0 +1,13 @@
+services:
+  site-checker:
+    image: site-checker:local
+    build:
+      context: .
+    container_name: site-checker
+    volumes:
+      - ./runs:/runs
+    environment:
+      - RUNS_DIR=/runs
+    entrypoint: ["python3", "/app/site_check.py"]
+    stdin_open: true
+    tty: true

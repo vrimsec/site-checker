@@ -1,0 +1,393 @@
+#!/usr/bin/env python3
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from datetime import datetime
+from urllib.parse import urlparse
+
+RUNS_DIR = os.environ.get("RUNS_DIR", "/runs")
+OUTDIR = os.path.join(RUNS_DIR, "output")
+REPORTDIR = os.path.join(RUNS_DIR, "reports")
+
+IMPORTANT_HEADERS = [
+    "content-security-policy",
+    "strict-transport-security",
+    "x-frame-options",
+    "x-content-type-options",
+    "referrer-policy",
+    "permissions-policy",
+]
+
+def tool_exists(name: str) -> bool:
+    return shutil.which(name) is not None
+
+def run_cmd(cmd: list[str], timeout: int = 600) -> tuple[int, str, str]:
+    p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+    return p.returncode, (p.stdout or ""), (p.stderr or "")
+
+def normalize_target(user_input: str) -> str:
+    """
+    Accept:
+      - example.com              -> https://example.com
+      - https://example.com
+      - http://example.com       (allowed for dev sites; we'll warn)
+    Reject:
+      - www.example.com          (ask for scheme)
+    """
+    s = (user_input or "").strip()
+    if not s:
+        raise ValueError("Empty input.")
+
+    low = s.lower()
+    if low.startswith("www."):
+        raise ValueError("Include scheme. Example: https://example.com (not www.example.com)")
+
+    if not (low.startswith("https://") or low.startswith("http://")):
+        s = "https://" + s
+
+    u = urlparse(s)
+    if not u.netloc:
+        raise ValueError("Invalid URL/domain.")
+
+    return f"{u.scheme}://{u.netloc}"
+
+def prompt_for_target() -> str:
+    while True:
+        try:
+            s = input("Enter target URL (format: https://example.com OR http://example.com): ").strip()
+            return normalize_target(s)
+        except ValueError as e:
+            print(f"[!] {e}")
+            continue
+
+def safe_name_from_host(host: str) -> str:
+    return re.sub(r"[^a-zA-Z0-9._-]+", "_", host)
+
+def fetch_headers(url: str) -> dict:
+    """
+    Curl preflight:
+      - follow redirects
+      - capture final URL + status
+      - capture response headers
+      - detect "down" (non-zero curl RC or status 000)
+    """
+    cmd = [
+        "bash", "-lc",
+        "set -o pipefail; "
+        f"curl -sS -L --max-time 25 --connect-timeout 10 "
+        f"-D - -o /dev/null "
+        f"-w 'FINAL_URL:%{{url_effective}}\\nSTATUS:%{{http_code}}\\n' "
+        f"'{url}'"
+    ]
+    rc, out, err = run_cmd(cmd, timeout=40)
+
+    text = out if out else ""
+    final_url = url
+    status_code = 0
+    headers = {}
+
+    for line in text.splitlines():
+        if line.startswith("FINAL_URL:"):
+            final_url = line.split("FINAL_URL:", 1)[1].strip()
+        elif line.startswith("STATUS:"):
+            try:
+                status_code = int(line.split("STATUS:", 1)[1].strip())
+            except Exception:
+                status_code = 0
+        else:
+            if ":" in line and not line.lower().startswith("http/"):
+                k, v = line.split(":", 1)
+                headers[k.strip().lower()] = v.strip()
+
+    # site_up rules (practical):
+    # - curl rc != 0 => down/failed
+    # - status_code == 0 => down/failed
+    site_up = (rc == 0 and status_code != 0)
+
+    return {
+        "requested_url": url,
+        "final_url": final_url,
+        "status_code": status_code,
+        "headers": headers,
+        "curl_rc": rc,
+        "curl_err_tail": (err or "")[-800:],
+        "site_up": site_up,
+    }
+
+def detect_cdn_hint(ns_records: list[str]) -> str:
+    joined = " ".join(ns_records).lower()
+    if "akam.net" in joined or "akamai" in joined:
+        return "Akamai"
+    if "cloudflare" in joined:
+        return "Cloudflare"
+    if "fastly" in joined:
+        return "Fastly"
+    if "netlify" in joined:
+        return "Netlify"
+    return ""
+
+def dig_record(name: str, record: str) -> list[str]:
+    rc, out, _ = run_cmd(["dig", "+short", name, record], timeout=20)
+    if rc != 0 or not out:
+        return []
+    return [x.strip() for x in out.splitlines() if x.strip()]
+
+def whois_lookup(domain: str) -> str:
+    rc, out, err = run_cmd(["whois", domain], timeout=25)
+    text = out if out else err
+    return "\n".join(text.splitlines()[:120])
+
+def nmap_scan(scan_target: str, out_prefix: str, top_ports: int = 1000) -> dict:
+    out_xml = f"{out_prefix}_nmap_ip.xml"
+    out_txt = f"{out_prefix}_nmap_ip.txt"
+
+    cmd = [
+        "nmap", "-sT", "-Pn", "-T3",
+        "--top-ports", str(top_ports),
+        "-sV", "--version-light",
+        "--open", "--max-retries", "2", "--host-timeout", "5m",
+        "-oX", out_xml, "-oN", out_txt,
+        scan_target
+    ]
+    rc, out, err = run_cmd(cmd, timeout=420)
+    return {
+        "mode": "ip",
+        "scan_target": scan_target,
+        "command": " ".join(cmd),
+        "return_code": rc,
+        "stdout_tail": (out or "")[-1200:],
+        "stderr_tail": (err or "")[-800:],
+        "output_xml": out_xml,
+        "output_txt": out_txt,
+    }
+
+def parse_open_ports_from_nmap_stdout(stdout_tail: str) -> str:
+    lines = stdout_tail.splitlines()
+    ports = []
+    in_table = False
+    for ln in lines:
+        if ln.startswith("PORT"):
+            in_table = True
+            continue
+        if in_table:
+            m = re.match(r"^(\d+/\w+)\s+open\s+([^\s]+)", ln.strip())
+            if m:
+                ports.append(f"{m.group(1)}({m.group(2)})")
+    return ", ".join(ports) if ports else ""
+
+def zap_baseline(target_url: str, out_prefix: str) -> dict:
+    zap_json = f"{out_prefix}_zap.json"
+    zap_html = f"{out_prefix}_zap.html"
+    zap_md = f"{out_prefix}_zap.md"
+
+    cmd = ["zap-baseline.py", "-t", target_url, "-J", zap_json, "-r", zap_html, "-w", zap_md, "-I"]
+    rc, out, err = run_cmd(cmd, timeout=900)
+    return {
+        "command": " ".join(cmd),
+        "return_code": rc,
+        "stdout_tail": (out or "")[-2000:],
+        "stderr_tail": (err or "")[-1200:],
+        "output_json": zap_json,
+        "output_html": zap_html,
+        "output_md": zap_md,
+    }
+
+def nuclei_scan(target_url: str, out_jsonl: str) -> dict:
+    cmd = [
+        "nuclei",
+        "-u", target_url,
+        "-jsonl",
+        "-follow-redirects",
+        "-severity", "low,medium,high,critical",
+        "-o", out_jsonl,
+        "-no-color",
+    ]
+    rc, out, err = run_cmd(cmd, timeout=900)
+    return {
+        "command": " ".join(cmd),
+        "return_code": rc,
+        "stdout_tail": (out or "")[-2000:],
+        "stderr_tail": (err or "")[-2000:],
+        "output_jsonl": out_jsonl,
+    }
+
+def count_jsonl_lines(path: str) -> int:
+    if not os.path.exists(path):
+        return 0
+    n = 0
+    with open(path, "r", encoding="utf-8", errors="ignore") as f:
+        for line in f:
+            if line.strip():
+                n += 1
+    return n
+
+def main():
+    os.makedirs(OUTDIR, exist_ok=True)
+    os.makedirs(REPORTDIR, exist_ok=True)
+
+    if len(sys.argv) >= 2:
+        try:
+            target = normalize_target(sys.argv[1])
+        except ValueError as e:
+            print(f"[!] {e}")
+            print("[!] Expected format: https://example.com OR http://example.com")
+            sys.exit(2)
+    else:
+        target = prompt_for_target()
+
+    u = urlparse(target)
+    host = u.hostname
+    if not host:
+        print("[!] Could not parse hostname.")
+        sys.exit(2)
+
+    needed = ["dig", "whois", "nmap", "nuclei", "zap-baseline.py", "curl"]
+    missing_tools = [t for t in needed if not tool_exists(t)]
+    if missing_tools:
+        print("[!] Missing tools in container PATH:", ", ".join(missing_tools))
+        sys.exit(3)
+
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    safe = safe_name_from_host(host)
+    prefix = os.path.join(OUTDIR, f"{safe}_{ts}")
+
+    # DNS + WHOIS always
+    a = dig_record(host, "A")
+    aaaa = dig_record(host, "AAAA")
+    cname = dig_record(host, "CNAME")
+    ns = dig_record(host, "NS")
+    mx = dig_record(host, "MX")
+    txt = dig_record(host, "TXT")
+    cdn_hint = detect_cdn_hint(ns)
+    whois_head = whois_lookup(host)
+
+    # Preflight HTTP reachability + headers
+    http_info = fetch_headers(target)
+    headers = http_info.get("headers", {})
+    missing_headers = [h for h in IMPORTANT_HEADERS if h not in headers]
+    present_headers = [h for h in IMPORTANT_HEADERS if h in headers]
+
+    # If site is down, write a report + JSON and stop early
+    if not http_info.get("site_up", False):
+        combined = {
+            "target": target,
+            "host": host,
+            "timestamp": datetime.now().isoformat(timespec="seconds"),
+            "http": http_info,
+            "headers_present": present_headers,
+            "headers_missing": missing_headers,
+            "recon": {
+                "dns": {"A": a, "AAAA": aaaa, "CNAME": cname, "NS": ns, "MX": mx, "TXT": txt[:20]},
+                "cdn_hint": cdn_hint,
+                "whois_head": whois_head,
+            },
+            "status": "DOWN",
+            "notes": [
+                "Target did not respond successfully to curl preflight (DNS/TLS/connect/timeout/etc).",
+                "Fix DNS/hosting/TLS first, then rerun.",
+            ],
+        }
+
+        combined_json_path = f"{prefix}_combined.json"
+        with open(combined_json_path, "w", encoding="utf-8") as f:
+            json.dump(combined, f, indent=2)
+
+        report_path = os.path.join(REPORTDIR, f"{safe}_{ts}_site_check_report.md")
+        with open(report_path, "w", encoding="utf-8") as f:
+            f.write("# Website Security Health Check Report (Combined)\n\n")
+            f.write(f"- Date: {datetime.now().isoformat(timespec='seconds')}\n")
+            f.write(f"- Target: {target}\n\n")
+            f.write("## Status\n\n")
+            f.write("**DOWN / Unreachable**\n\n")
+            f.write("### Why\n\n")
+            f.write(f"- curl rc: {http_info.get('curl_rc')}\n")
+            f.write(f"- status: {http_info.get('status_code')}\n")
+            err = (http_info.get("curl_err_tail") or "").strip()
+            if err:
+                f.write(f"- curl error: {err}\n")
+            f.write("\n## Recon (still collected)\n\n")
+            f.write(f"- DNS A: {a}\n")
+            f.write(f"- DNS AAAA: {aaaa}\n")
+            f.write(f"- DNS NS: {ns}\n")
+            f.write(f"- CDN hint: {cdn_hint or '(none detected)'}\n\n")
+            f.write("## Outputs\n\n")
+            f.write(f"- Combined JSON: `{combined_json_path}`\n")
+            f.write(f"- Report: `{report_path}`\n")
+
+        print("\n[!] Target appears DOWN / unreachable. Wrote report and stopped before scans.")
+        print(f"[+] Combined JSON: {combined_json_path}")
+        print(f"[+] Combined report: {report_path}")
+        print("[i] On the host, look in: ~/site-checker-runs/output and ~/site-checker-runs/reports")
+        return
+
+    # Site is up -> do scans
+    final_url = http_info.get("final_url", target)
+
+    scan_ip = a[0] if a else host
+    nmap_res = nmap_scan(scan_ip, prefix, top_ports=1000)
+    open_ports = parse_open_ports_from_nmap_stdout(nmap_res.get("stdout_tail", ""))
+
+    zap_res = zap_baseline(final_url, prefix)
+
+    nuclei_out = f"{prefix}_nuclei.jsonl"
+    nuclei_res = nuclei_scan(final_url, nuclei_out)
+    nuclei_count = count_jsonl_lines(nuclei_out)
+
+    combined = {
+        "target": target,
+        "host": host,
+        "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "final_url": final_url,
+        "http": http_info,
+        "headers_present": present_headers,
+        "headers_missing": missing_headers,
+        "recon": {
+            "dns": {"A": a, "AAAA": aaaa, "CNAME": cname, "NS": ns, "MX": mx, "TXT": txt[:20]},
+            "cdn_hint": cdn_hint,
+            "whois_head": whois_head,
+        },
+        "nmap": {**nmap_res, "open_ports_summary": open_ports},
+        "zap": zap_res,
+        "nuclei": {**nuclei_res, "findings_count": nuclei_count},
+        "status": "UP",
+        "notes": [
+            "If the site is behind a CDN, Nmap results usually describe the CDN edge, not the origin server.",
+            "Nuclei JSONL can be 0 bytes when there are 0 matches (normal).",
+            "ZAP baseline is passive/light and should be validated before production changes.",
+            "Only scan targets you have explicit permission to test.",
+        ],
+    }
+
+    combined_json_path = f"{prefix}_combined.json"
+    with open(combined_json_path, "w", encoding="utf-8") as f:
+        json.dump(combined, f, indent=2)
+
+    report_path = os.path.join(REPORTDIR, f"{safe}_{ts}_site_check_report.md")
+    with open(report_path, "w", encoding="utf-8") as f:
+        f.write("# Website Security Health Check Report (Combined)\n\n")
+        f.write(f"- Date: {datetime.now().isoformat(timespec='seconds')}\n")
+        f.write(f"- Target: {target}\n")
+        f.write(f"- Final URL: {final_url}\n\n")
+        if target.lower().startswith("http://"):
+            f.write("**Note:** Target used HTTP (not HTTPS). This is common in dev but not recommended for production.\n\n")
+
+        f.write("## Summary (no LLM yet)\n\n")
+        f.write(f"- CDN hint: {cdn_hint or '(none detected)'}\n")
+        f.write(f"- Missing security headers: {', '.join(missing_headers) if missing_headers else 'none from checked list'}\n")
+        f.write(f"- Nuclei findings (count): {nuclei_count}\n")
+        f.write(f"- Nmap open ports: {open_ports if open_ports else '(none detected / filtered)'}\n\n")
+
+        f.write("## Outputs\n\n")
+        f.write(f"- Combined JSON: `{combined_json_path}`\n")
+        f.write(f"- Report: `{report_path}`\n")
+
+    print("\n[+] Done.")
+    print(f"[+] Combined JSON: {combined_json_path}")
+    print(f"[+] Combined report: {report_path}")
+    print("[i] On the host, look in: ~/site-checker-runs/output and ~/site-checker-runs/reports")
+
+if __name__ == "__main__":
+    main()

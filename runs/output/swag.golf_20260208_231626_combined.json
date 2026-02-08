@@ -1,0 +1,142 @@
+{
+  "timestamp": "2026-02-08T23:16:26",
+  "target": "https://swag.golf",
+  "host": "swag.golf",
+  "final_url": "https://swag.golf/",
+  "http_probe": {
+    "ok": true,
+    "status_code": 200,
+    "final_url": "https://swag.golf/",
+    "headers": {
+      "date": "Sun, 08 Feb 2026 23:16:26 GMT",
+      "content-type": "text/html; charset=utf-8",
+      "transfer-encoding": "chunked",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "etag": "W/\"page_cache:26220470:IndexController:38dbaee21cbf00188ab7c9904ae31aad\"",
+      "link": "<https://cdn.shopify.com>; rel=\"preconnect\", <https://cdn.shopify.com>; rel=\"preconnect\"; crossorigin, <//swag.golf/cdn/shop/t/324/assets/theme.css?v=146742182106272886771763526627>; as=\"style\"; rel=\"preload\"",
+      "set-cookie": "localization=US; path=/; expires=Mon, 08 Feb 2027 23:16:26 GMT, cart_currency=USD; path=/; expires=Sun, 22 Feb 2026 23:16:26 GMT, _shopify_essential=:AZw_issmAAEAHLeyqpGREXgApq3jF2HguQiutLtyZ7BmqkehK6fOZc9TOxLisAxbIrEmVoH6xNB3mnl8I2SIU3LYf6p6Yf6hu7qNmMbqU6mIZZrDxe8ba3ECBMD303Ua0g9Zmfot_JymtRxZu0w-hZGtUooU6xYK84rpyfhm3XW6-e8TMBWHO3zRKHrcDrJO7egr7IwFzznxrvmpAlZu1t71jX-HYVu6uTe9x3zB4xgQDFx6FhP0L2n1dLAQ2-7yfXLNQPCFVsI2r0fPvvIa4pKcaP3lytIVb5zNvkOxFoWpgAPGzy5j19x6UebUoUGUbGeMduM:; Max-Age=31536000; Path=/; HttpOnly; Secure; Priority=High; SameSite=Lax",
+      "shopify-complexity-score": "190",
+      "x-frame-options": "DENY",
+      "content-security-policy": "block-all-mixed-content; frame-ancestors 'none'; upgrade-insecure-requests;",
+      "strict-transport-security": "max-age=7889238",
+      "x-shopid": "26220470",
+      "vary": "Accept, accept-encoding",
+      "alt-svc": "h3=\":443\"; ma=86400",
+      "content-language": "en-US",
+      "powered-by": "Shopify",
+      "server-timing": "processing;dur=21, db;dur=2, asn;desc=\"1136\", edge;desc=\"AMS\", country;desc=\"NL\", theme;desc=\"140649431229\", pageType;desc=\"index\", servedBy;desc=\"7wbt\", requestID;desc=\"e78200f5-b9cd-447b-98f1-2aab12bec934-1770592586\", _y;desc=\"00000000-0000-0000-5000-000000000000\", _s;desc=\"00000000-0000-0000-5000-000000000000\", _cmp;desc=\"3.ampS_NLGR_t_f_TzTFLjH1Su-MGH8ruzeh1g\", compressionLevel;desc=\"5\", cfRequestDuration;dur=61.999798",
+      "x-dc": "gcp-europe-west4,gcp-europe-west1,gcp-europe-west1",
+      "x-request-id": "e78200f5-b9cd-447b-98f1-2aab12bec934-1770592586",
+      "cf-cache-status": "DYNAMIC",
+      "report-to": "{\"endpoints\":[{\"url\":\"https:\\/\\/a.nel.cloudflare.com\\/report\\/v4?s=uCFQb1zAw76IcoloeIDNk%2FpPMqXIft9oL7EhD%2BNWaok6Fnli7U3qIyvPv6gRwyRuX2eIM%2B6qdnCjoz8R0pT3d9SD7gh95J3b7ha6IpfEsL10BaUZXi%2BxE1xmEw%3D%3D\"}],\"group\":\"cf-nel\",\"max_age\":604800}",
+      "nel": "{\"success_fraction\":0.01,\"report_to\":\"cf-nel\",\"max_age\":604800}",
+      "x-xss-protection": "1; mode=block",
+      "x-content-type-options": "nosniff",
+      "x-permitted-cross-domain-policies": "none",
+      "x-download-options": "noopen",
+      "server": "cloudflare",
+      "cf-ray": "9caed5b19b86b914-AMS"
+    },
+    "error": ""
+  },
+  "cdn_hint": "Cloudflare",
+  "dns": {
+    "A": [
+      "23.227.38.32"
+    ],
+    "AAAA": [],
+    "CNAME": [],
+    "NS": [
+      "ns45.domaincontrol.com.",
+      "ns46.domaincontrol.com."
+    ],
+    "MX": [
+      "1 aspmx.l.google.com.",
+      "5 alt1.aspmx.l.google.com.",
+      "5 alt2.aspmx.l.google.com.",
+      "10 alt3.aspmx.l.google.com.",
+      "10 alt4.aspmx.l.google.com."
+    ],
+    "TXT": [
+      "\"google-site-verification=VIQoP-ry8IlE-0KgkLPTREdKNaQq02NCL-Zr8rj7NX8\"",
+      "\"v=spf1 include:dc-aa8e722993._spfm.swag.golf ~all\"",
+      "\"v=spf1 include:dc-aa8e722993._spfm.swag.golf include:amazonses.com ~all\"",
+      "\"klaviyo-site-verification=R22VM4\""
+    ]
+  },
+  "whois": {
+    "status": "ok",
+    "return_code": 0,
+    "whois_head": "TLD is not supported.\n>>> Last update of WHOIS database: 2026-02-08T23:16:26Z <<<\n\nTerms of Use: Access to WHOIS information is provided to assist persons in determining the contents of a domain name registration record in the registry database. The data in this record is provided by Identity Digital or the Registry Operator for informational purposes only, and accuracy is not guaranteed. This service is intended only for query-based access. You agree that you will use this data only for lawful purposes and that, under no circumstances will you use this data to (a) allow, enable, or otherwise support the transmission by e-mail, telephone, or facsimile of mass unsolicited, commercial advertising or solicitations to entities other than the data recipient's own existing customers; or (b) enable high volume, automated, electronic processes that send queries or data to the systems of Registry Operator, a Registrar, or Identity Digital except as reasonably necessary to register domain names or modify existing registrations. When using the Whois service, please consider the following: The Whois service is not a replacement for standard EPP commands to the SRS service. Whois is not considered authoritative for registered domain objects. The Whois service may be scheduled for downtime during production or OT&E maintenance periods. Queries to the Whois services are throttled. If too many queries are received from a single IP address within a specified time, the service will begin to reject further queries for a period of time to prevent disruption of Whois service access. Abuse of the Whois system through data mining is mitigated by detecting and limiting bulk query access from single sources. Where applicable, the presence of a [Non-Public Data] tag indicates that such data is not made publicly available due to applicable data privacy laws or requirements. Should you wish to contact the registrant, please refer to the Whois records available through the registrar URL listed above. Access to non-public data may be provided, upon request, where it can be re\nasonably confirmed that the requester holds a specific legitimate interest and a proper legal basis for accessing the withheld data. Access to this data provided by Identity Digital can be requested by submitting a request via the form found at https://www.identity.digital/about/policies/whois-layered-access/. The Registrar of Record identified in this output may have an RDDS service that can be queried for additional information on how to contact the Registrant, Admin, or Tech contact of the queried domain name. Identity Digital Inc. and Registry Operator reserve the right to modify these terms at any time. By submitting this query, you agree to abide by this policy.",
+    "stderr_tail": ""
+  },
+  "missing_security_headers": [
+    "referrer-policy",
+    "permissions-policy"
+  ],
+  "present_security_headers": [
+    "content-security-policy",
+    "strict-transport-security",
+    "x-frame-options",
+    "x-content-type-options"
+  ],
+  "combined_json_path": "/runs/output/swag.golf_20260208_231626_combined.json",
+  "report_path": "/runs/reports/swag.golf_20260208_231626_site_check_report.md",
+  "notes": [
+    "This is an automated health check (light scan).",
+    "No credentialed testing, no brute forcing, no exploitation steps.",
+    "Only scan targets you own or have explicit permission to test."
+  ],
+  "nmap": {
+    "scan_target": "23.227.38.32",
+    "command": "nmap -sT -Pn -T3 --top-ports 1000 -sV --version-light --open --max-retries 2 --host-timeout 5m -oX /runs/output/swag.golf_20260208_231626_nmap_ip.xml -oN /runs/output/swag.golf_20260208_231626_nmap_ip.txt 23.227.38.32",
+    "status": "ok",
+    "return_code": 0,
+    "stdout_tail": "Starting Nmap 7.93 ( https://nmap.org ) at 2026-02-08 23:16 UTC\nNmap scan report for myshopify.com (23.227.38.32)\nHost is up (0.0092s latency).\nNot shown: 996 filtered tcp ports (no-response)\nSome closed ports may be reported as filtered due to --defeat-rst-ratelimit\nPORT     STATE SERVICE  VERSION\n80/tcp   open  http     Cloudflare http proxy\n443/tcp  open  ssl/http Cloudflare http proxy\n8080/tcp open  http     Cloudflare http proxy\n8443/tcp open  ssl/http Cloudflare http proxy\n\nService detection performed. Please report any incorrect results at https://nmap.org/submit/ .\nNmap done: 1 IP address (1 host up) scanned in 16.94 seconds\n",
+    "stderr_tail": "",
+    "output_xml": "/runs/output/swag.golf_20260208_231626_nmap_ip.xml",
+    "output_txt": "/runs/output/swag.golf_20260208_231626_nmap_ip.txt"
+  },
+  "nmap_summary": {
+    "mode": "ip",
+    "scan_target": "23.227.38.32",
+    "open_ports": [
+      80,
+      443,
+      8080,
+      8443
+    ]
+  },
+  "nuclei": {
+    "command": "nuclei -u https://swag.golf/ -jsonl -follow-redirects -severity low,medium,high,critical -o /runs/output/swag.golf_20260208_231626_nuclei.jsonl -no-color",
+    "status": "ok",
+    "return_code": 0,
+    "stdout_tail": "[WRN] Loading 2 unsigned templates for scan. Use with caution.\n",
+    "stderr_tail": "\n                     __     _\n   ____  __  _______/ /__  (_)\n  / __ \\/ / / / ___/ / _ \\/ /\n / / / / /_/ / /__/ /  __/ /\n/_/ /_/\\__,_/\\___/_/\\___/_/   v3.7.0\n\n\t\tprojectdiscovery.io\n\n[INF] nuclei-templates are not installed, installing...\n[INF] Successfully installed nuclei-templates at /home/zap/nuclei-templates\n[WRN] Found 3 templates with runtime error (use -validate flag for further examination)\n[INF] Current nuclei version: v3.7.0 (latest)\n[INF] Current nuclei-templates version: v10.3.8 (latest)\n[INF] New templates added in latest release: 457\n[INF] Templates loaded for current scan: 6181\n[INF] Executing 6179 signed templates from projectdiscovery/nuclei-templates\n[INF] Targets loaded for current scan: 1\n[INF] Templates clustered: 433 (Reduced 377 Requests)\n[INF] Using Interactsh Server: oast.live\n[INF] Scan completed in 2m. 0 matches found.\n",
+    "output_jsonl": "/runs/output/swag.golf_20260208_231626_nuclei.jsonl"
+  },
+  "nuclei_summary": {
+    "count": 0,
+    "by_severity": {},
+    "top": [],
+    "status": "ok"
+  },
+  "zap": {
+    "command": "zap-baseline.py -t https://swag.golf/ -J /runs/output/swag.golf_20260208_231626_zap.json -r /runs/output/swag.golf_20260208_231626_zap.html -w /runs/output/swag.golf_20260208_231626_zap.md -I",
+    "status": "ok",
+    "return_code": 3,
+    "stdout_tail": "s help message\n    -c config_file    config file to use to INFO, IGNORE or FAIL warnings\n    -u config_url     URL of config file to use to INFO, IGNORE or FAIL warnings\n    -g gen_file       generate default config file (all rules set to WARN)\n    -m mins           the number of minutes to spider for (default 1)\n    -r report_html    file to write the full ZAP HTML report\n    -w report_md      file to write the full ZAP Wiki (Markdown) report\n    -x report_xml     file to write the full ZAP XML report\n    -J report_json    file to write the full ZAP JSON document\n    -a                include the alpha passive scan rules as well\n    -d                show debug messages\n    -P                specify listen port\n    -D secs           delay in seconds to wait for passive scanning \n    -i                default rules not in the config file to INFO\n    -I                do not return failure on warning\n    -j                use the Ajax spider in addition to the traditional one\n    -l level          minimum level to show: PASS, IGNORE, INFO, WARN or FAIL, use with -s to hide example URLs\n    -n context_file   context file which will be loaded prior to spidering the target\n    -p progress_file  progress file which specifies issues that are being addressed\n    -s                short output format - dont show PASSes or example URLs\n    -T mins           max time in minutes to wait for ZAP to start and the passive scan to run\n    -U user           username to use for authenticated scans - must be defined in the given context file\n    -z zap_options    ZAP command line options e.g. -z \"-config aaa=bbb -config ccc=ddd\"\n    --hook            path to python file that define your custom hooks\n    --auto            use the automation framework if supported for the given parameters (this is now the default)\n    --autooff         do not use the automation framework even if supported for the given parameters\n\nFor more details see https://www.zaproxy.org/docs/docker/baseline-scan/\n",
+    "stderr_tail": "2026-02-08 23:19:21,986 A file based option has been specified but the directory '/zap/wrk' is not mounted \n",
+    "output_json": "/runs/output/swag.golf_20260208_231626_zap.json",
+    "output_html": "/runs/output/swag.golf_20260208_231626_zap.html",
+    "output_md": "/runs/output/swag.golf_20260208_231626_zap.md"
+  },
+  "zap_summary": {
+    "count": 0,
+    "by_risk": {},
+    "top": [],
+    "status": "ok"
+  },
+  "risk_level": "Low"
+}

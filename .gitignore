@@ -1,8 +1,14 @@
 __pycache__/
 *.pyc
+
+# runtime outputs (keep OUT of repo)
 runs/
 output/
 reports/
-.env
+
+# python envs
 .venv/
 venv/
+
+# env files
+.env

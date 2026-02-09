@@ -3,7 +3,7 @@ services:
     image: site-checker:local
     build:
       context: .
-    container_name: site-checker
+    # Save results inside this repo folder (portable)
     volumes:
       - ./runs:/runs
     environment:

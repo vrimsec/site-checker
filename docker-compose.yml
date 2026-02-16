@@ -1,13 +1,59 @@
 services:
   site-checker:
+    build: .
     image: site-checker:local
-    build:
-      context: .
-    # Save results inside this repo folder (portable)
+    volumes:
+      - ./runs:/runs
+      - ./runs:/zap/wrk
+    environment:
+      - RUNS_DIR=/runs
+
+      # ===== Reachability tuning =====
+      - HTTP_TIMEOUT=12
+      - HTTP_RETRIES=2
+
+      # ===== Tool timeouts =====
+      - WHOIS_TIMEOUT=25
+      - DIG_TIMEOUT=20
+      - NMAP_TIMEOUT=900
+      - NUCLEI_TIMEOUT=600
+      - ZAP_TIMEOUT=1200
+      - SUBFINDER_TIMEOUT=120
+      - HARVESTER_TIMEOUT=240
+
+      # ===== Subdomain enumeration =====
+      - SUBDOMAIN_ENUM=1
+      - SUBDOMAIN_PROBE=1
+      - SUBDOMAIN_MAX=300
+
+      # ===== Nmap profile =====
+      - NMAP_PROFILE=FULL
+
+      # ===== ZAP strength (baseline + ajax spider by default) =====
+      - ZAP_MODE=baseline
+      - ZAP_SPIDER_MINS=3
+      - ZAP_MAX_TIME_MINS=12
+      - ZAP_USE_AJAX=1
+      - ZAP_INCLUDE_ALPHA=1
+      - ZAP_ACTIVE=0
+      - ZAP_WRK=/zap/wrk
+
+    entrypoint: ["python3", "/app/worker.py"]
+    restart: unless-stopped
+
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+
+  site-checker-ui:
+    image: site-checker:local
+    depends_on:
+      - site-checker
     volumes:
       - ./runs:/runs
     environment:
       - RUNS_DIR=/runs
-    entrypoint: ["python3", "/app/site_check.py"]
-    stdin_open: true
-    tty: true
+    entrypoint: ["/opt/ui-venv/bin/python", "/app/ui/app.py"]
+    ports:
+      - "8088:8088"
+    restart: unless-stopped
